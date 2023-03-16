@@ -29,14 +29,18 @@ public class SqlLogPlugin implements Interceptor {
     MappedStatement mappedStatement = (MappedStatement) arg;
     SqlSource sqlSource = mappedStatement.getSqlSource();
     BoundSql boundSql = sqlSource.getBoundSql(invocation.getArgs()[1]);
-    MapperMethod.ParamMap map = (MapperMethod.ParamMap) invocation.getArgs()[1];
     String sql = boundSql.getSql().replaceAll("\n", "").replaceAll("\\s+", " ");
     int paramCount = sql.length() - sql.replaceAll("\\?","").length();
     if (paramCount != 0) {
-      for (int i = 1; i <= paramCount; i++) {
-        String key = "param" + i;
-        Object o = map.get(key);
-        sql = sql.replaceFirst("\\?", String.valueOf(o));
+      if (paramCount == 1) {
+        sql = sql.replaceFirst("\\?", String.valueOf(invocation.getArgs()[1]));
+      } else {
+        MapperMethod.ParamMap map = (MapperMethod.ParamMap) invocation.getArgs()[1];
+        for (int i = 1; i <= paramCount; i++) {
+          String key = "param" + i;
+          Object o = map.get(key);
+          sql = sql.replaceFirst("\\?", String.valueOf(o));
+        }
       }
     }
     System.err.println("=============执行sql info==============");
